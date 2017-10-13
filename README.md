@@ -36,7 +36,7 @@ which should contain libvideokit.so (unless you have changed the name of library
 **On the latest FFmpeg and NDK I got problems with compiling of libraries for MIPS architecture**. If you really need that one - use version of FFmpeg 2.8.4 on this repo on accroding branch.
 
 ## License
-FFmpeg by itself is licensed under LGPL. FFmpeg folder contains **unchanged** code of FFmpeg of version 2.8.4, all changes
+FFmpeg by itself is licensed under LGPL. FFmpeg folder contains **unchanged** code of FFmpeg of version 3.2.4, all changes
 is done in files inside JNI/app/jni folder. Code that was written by me is licensed under LGPL too, so you are free to use it.
 
 **Important note: libx264, which is also distributed inside FFmpeg folder, is licensed under GPL. If you will use this development
