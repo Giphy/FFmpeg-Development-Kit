@@ -53,7 +53,6 @@
 #endif
 #include <pthread.h>
 #include <dlfcn.h>
-#include "coffeecatch.h"
 
 /*#define NDK_DEBUG 1*/
 #if ( defined(NDK_DEBUG) && ( NDK_DEBUG == 1 ) )
