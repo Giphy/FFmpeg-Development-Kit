@@ -4647,7 +4647,7 @@ static void log_callback_null(void *ptr, int level, const char *fmt, va_list vl)
 {
 }
 
-int main(int loglevel, int argc, char **argv)
+int ffmpeg_main(int loglevel, int argc, char **argv)
 {
 	received_sigterm = 0;
 	received_nb_signals = 0;

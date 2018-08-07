@@ -6,18 +6,37 @@
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
 
-JavaVM *sVm = NULL;
+int ffmpeg_main(int level, int argc, char **argv);
 
-int main(int level, int argc, char **argv);
+int invoke_ffmpeg(JNIEnv *env, jint loglevel, jobjectArray args);
 
-jint JNI_OnLoad(JavaVM* vm, void* reserved) {
-    sVm = vm;
-    return JNI_VERSION_1_6;
+JNIEXPORT jint JNICALL Java_com_giphy_messenger_util_VideoKit_run(JNIEnv *env, __unused jclass class, jint loglevel, jobjectArray args) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        int retCode = invoke_ffmpeg(env, loglevel, args);
+        _exit(retCode);
+    } else if (pid > 0) {
+        int wstatus;
+        pid = waitpid(pid, &wstatus, 0);
+        if (pid == -1) {
+            LOGW("Failed to wait for ffmpeg process, errno: %d", errno);
+        } else if (WIFEXITED(wstatus)) {
+            return WEXITSTATUS(wstatus);
+        } else if (WIFSIGNALED(wstatus)) {
+            LOGW("ffmpeg process killed by signal %d", WTERMSIG(wstatus));
+        }
+    } else {
+        LOGW("Failed to fork ffmpeg process, errno: %d", errno);
+    }
+    return -1;
 }
 
-JNIEXPORT jint JNICALL Java_processing_ffmpeg_videokit_VideoKit_run(JNIEnv *env, jobject obj, jint loglevel, jobjectArray args) {
+int invoke_ffmpeg(JNIEnv *env, jint loglevel, jobjectArray args) {
     int i = 0;
     int argc = 0;
     char **argv = NULL;
@@ -29,18 +48,17 @@ JNIEXPORT jint JNICALL Java_processing_ffmpeg_videokit_VideoKit_run(JNIEnv *env,
         strr = (jstring *) malloc(sizeof(jstring) * argc);
 
         for (i = 0; i < argc; ++i) {
-            strr[i] = (jstring)(*env)->GetObjectArrayElement(env, args, i);
-            argv[i] = (char *)(*env)->GetStringUTFChars(env, strr[i], 0);
+            strr[i] = (jstring) (*env)->GetObjectArrayElement(env, args, i);
+            argv[i] = (char *) (*env)->GetStringUTFChars(env, strr[i], 0);
             if (loglevel == 2) {
                 LOGI("Option: %s", argv[i]);
             }
         }
     }
 
-    jint retcode = 0;
-    retcode = main(loglevel, argc, argv);
+    int retcode = ffmpeg_main(loglevel, argc, argv);
     if (loglevel == 2) {
-       LOGI("Main ended with status %d", retcode);
+        LOGI("Main ended with status %d", retcode);
     }
 
     for (i = 0; i < argc; ++i) {
